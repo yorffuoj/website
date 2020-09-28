@@ -11,7 +11,7 @@ from django.urls import reverse
 from .forms import AddStationForm
 from .models import Station
 
-STATIONS = [60, 35, 34, 97, ]
+STATIONS = [60, 35, 34, 97, 123]
 ADDED_STATIONS = []
 BASE_URL = 'https://api.jcdecaux.com/vls/v1/stations/'
 CONTRACT = 'toulouse'
@@ -26,12 +26,15 @@ def index(request):
     add_station_form = AddStationForm(displayed_stations=STATIONS + ADDED_STATIONS)
 
     context = {'selected_stations': selected_stations, 'added_stations': added_stations,
-               'add_station_form': add_station_form}
+               'add_station_form': add_station_form, 'stations': Station.objects.all(), }
 
     return render(request, 'velose/index.html', context)
 
 
 def update_visible_stations():
+    print(Station.objects.all())
+    if not Station.objects.all():
+        update_database()
     for station_nb in STATIONS + ADDED_STATIONS:
         station_url = f'{BASE_URL}{station_nb}?contract={CONTRACT}&apiKey={API_KEY}'
         updated_station = json.loads(requests.get(station_url).text)
