@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Oh le joli petit site{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" {% block css %} href="{% static 'velose/style.css' %}"{% endblock %}>
+</head>
+<body>
+{% block content %}
+{% endblock %}
+</body>
+</html>

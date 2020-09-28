@@ -1,0 +1,63 @@
+{% extends "velose/base.html" %}
+
+{% block title %}Enlarge your velose{% endblock %}
+
+{% load static %}
+{% block css %} href="{% static 'velose/style.css' %}"{% endblock %}
+
+{% block content %}
+<h1>Stations de vélo autour de chez nous :</h1>
+<div class="stations selected_stations">
+{% for station in selected_stations%}
+    <div class="station">
+        <p class="name">{{ station.name }}</p>
+        {% if station.status == 'OPEN' %}
+            <p>Station {{ station.number }} - <span class="open">Ouverte</span></p>
+            <ul>
+                {% if station.available_bikes == 0 %}
+                    <li> <span class="available_bikes no_bikes">{{ station.available_bikes }} vélos dispos</span></li>
+                {% elif station.available_bikes <= 5 %}
+                    <li> <span class="available_bikes rare_bikes">{{ station.available_bikes }} vélos dispos</span></li>
+                {% else %}
+                    <li> <span class="available_bikes lot_of_bikes">{{ station.available_bikes }} vélos dispos</span></li>
+                {% endif %}
+                <li class="available_bike_stands">{{ station.available_bike_stands }} places libres</li>
+            </ul>
+        {% else %}
+            <p>Station {{ station.number }} - <span class="closed">Closed</span></p>
+        {% endif %}
+    </div>
+{% endfor %}
+</div>
+<p><a href="{% url 'velose:index' %}">Rafraichir les stations</a></p>
+<p><a href="{% url 'velose:update' %}">Mettre à jour la liste de toutes les stations</a> (environ 1min 30s)</p>
+<h1>Stations ajoutées :</h1>
+<div class="stations added_stations">
+{% for station in added_stations%}
+    <div class="station ">
+        <p class="name">{{ station.name }}</p>
+        {% if station.status == 'OPEN' %}
+            <p>Station {{ station.number }} - <span class="open">Ouverte</span></p>
+            <ul>
+                {% if station.available_bikes == 0 %}
+                    <li> <span class="available_bikes no_bikes">{{ station.available_bikes }} vélos dispos</span></li>
+                {% elif station.available_bikes <= 5 %}
+                    <li> <span class="available_bikes rare_bikes">{{ station.available_bikes }} vélos dispos</span></li>
+                {% else %}
+                <li> <span class="available_bikes lot_of_bikes">{{ station.available_bikes }} vélos dispos</span></li>
+                {% endif %}
+                <li class="available_bike_stands">{{ station.available_bike_stands }} places libres</li>
+            </ul>
+        {% else %}
+            <p>Station {{ station.number }} - <span class="closed">Closed</span></p>
+        {% endif %}
+        <a href="{% url 'velose:remove' station.number %}">Supprimer</a>
+    </div>
+{% endfor %}
+</div>
+<form action="{% url 'velose:add' %}" method=GET>
+    {% csrf_token %}
+    {{ add_station_form }}
+    <input id="add-btn" type="submit" value="OK">
+</form>
+{% endblock %}
