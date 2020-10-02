@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from django.db import models
+from django.utils.timezone import make_aware
 
 STATION_STATUSES = (
     ('OPEN', 'Open'),
@@ -28,16 +31,18 @@ class Station(models.Model):
     available_bike_stands = models.IntegerField('bornes dispos')
     available_bikes = models.IntegerField('velos dispos')
     status = models.CharField(max_length=200, choices=STATION_STATUSES)
-    last_update = models.IntegerField()
+    last_update = models.DateTimeField('dernière mise-à-jour')
+    starred = models.BooleanField()
 
     def __str__(self):
-        return self.name
+        return f"{self.number} - {self.name}"
 
     @classmethod
     def create(cls, number, contract_name, name, address, position, banking, bonus,
                bike_stands, available_bike_stands, available_bikes, status, last_update):
         position_do = Position.create(position.get('lat'), position.get('lng'))
         position_do.save()
+        formatted_update = make_aware(datetime.fromtimestamp(last_update / 1000))
         station = cls(number=number,
                       contract_name=contract_name,
                       name=name,
@@ -49,13 +54,18 @@ class Station(models.Model):
                       available_bike_stands=available_bike_stands,
                       available_bikes=available_bikes,
                       status=status,
-                      last_update=last_update,
+                      last_update=formatted_update,
+                      starred=False,
                       )
         return station
 
     def refresh(self, bike_stands, available_bike_stands, available_bikes, status, last_update):
+        formatted_update = make_aware(datetime.fromtimestamp(last_update / 1000))
         self.bike_stands = bike_stands
         self.available_bike_stands = available_bike_stands
         self.available_bikes = available_bikes
         self.status = status
-        self.last_update = last_update
+        self.last_update = formatted_update
+
+    def toggle_star(self):
+        self.starred = not self.starred

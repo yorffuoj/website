@@ -1,0 +1,77 @@
+{% extends "velose/base.html" %}
+
+{% block title %}Station {{ station.number }} - {{ station.name }}{% endblock %}
+
+{% block includes %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'velose/bootstrap.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'velose/style.css' %}">
+<script src="{% static 'velose/jquery.min.js' %}"></script>
+<script src="{% static 'velose/bootstrap.bundle.min.js' %}"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between bg-secondary p-1 bg-info text-light">
+    <a role="button" class="btn" href="{% url 'velose:index' %}">
+        <h1 class="p-2 m-2 flex-grow-1 text-light">Enlarge your vélouse</h1>
+    </a>
+    <div class="button-group mx-2 my-4 ">
+        <a role="button" class="btn btn-light p-2" href="{% url 'velose:detail' station.number %}">
+            <span class="align-bottom">Rafraichir les infos de la station</span>
+        </a>
+    </div>
+</div>
+<br>
+<div class="container">
+<div class="station">
+    <h1>Station n° {{ station.number }} - {{ station.name }}</h1>
+    <ul class="list-group">
+        <li class="list-group-item"><span class="font-weight-bold">Station favorite : </span>
+            {% if station.starred %}
+                Oui
+            {% else %}
+                Non
+            {% endif %}</li>
+        <li class="list-group-item"><span class="font-weight-bold">Adresse : </span>{{ station.address }}</li>
+        <li class="list-group-item"><span class="font-weight-bold">Nombre de bornes : </span>{{ station.bike_stands }}</li>
+        <li class="list-group-item"><span class="font-weight-bold">Vélouses dispos : </span>{{ station.available_bikes }}</li>
+        <li class="list-group-item"><span class="font-weight-bold">Bornes libres : </span>{{ station.available_bike_stands }}</li>
+        <li class="list-group-item"><span class="font-weight-bold">Etat : </span>
+            {% if station.status == 'OPEN' %}
+                Ouverte
+            {% else %}
+                Fermée
+            {% endif %}</li>
+        <li class="list-group-item">
+             <span class="font-weight-bold">Dernière mise-à-jour : </span>
+             {{ station.last_update|date:"d/m/Y" }} {{ station.last_update|time:"H:i:s" }}</li>
+        <li class="list-group-item"><span class="font-weight-bold">Position : </span>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><em>Latitude :</em> {{ station.position.lat }}</li>
+            <li class="list-group-item"><em>Longitude :</em> {{ station.position.lng }}</li>
+            </ul>
+        </li>
+        <li class="list-group-item"><span class="font-weight-bold">Paiement par carte bancaire : </span>
+            {% if station.banking %}
+                Accepté
+            {% else %}
+                Refusé
+            {% endif %}
+        </li>
+         <li class="list-group-item"><span class="font-weight-bold">Bonus : </span>
+            {% if station.bonus %}
+                Oui
+            {% else %}
+                Non
+            {% endif %}
+        </li>
+    </ul>
+</div>
+</div>
+{% endblock %}

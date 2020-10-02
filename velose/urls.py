@@ -6,6 +6,7 @@ app_name = 'velose'
 urlpatterns = [
     path('', views.index, name='index'),
     path('update', views.update, name='update'),
-    path('add', views.add, name='add'),
-    path('<int:station_number>/remove', views.remove, name='remove'),
+    path('star', views.star_no_arg, name='star_no_arg'),
+    path('<int:station_number>/star', views.star, name='star'),
+    path('<int:station_number>', views.detail, name='detail'),
 ]
