@@ -20,7 +20,7 @@ def index(request):
 
     context = {'starred_stations': starred_stations, 'stations': Station.objects.all(), }
 
-    return render(request, 'velose/index.html', context)
+    return render(request, 'velouse/index.html', context)
 
 
 def refresh_station(station_nb):
@@ -38,7 +38,7 @@ def refresh_station(station_nb):
 
 def update(request):
     reload_full_database()
-    return HttpResponseRedirect(reverse('velose:index'))
+    return HttpResponseRedirect(reverse('velouse:index'))
 
 
 def get_stations_from_api():
@@ -79,6 +79,9 @@ def reload_full_database():
 
 
 def refresh_database():
+    if not Station.objects.all():
+        reload_full_database()
+
     print(f'[{datetime.now()}] Start refreshing station database')
     stations = get_stations_from_api()
     station_list = []
@@ -111,10 +114,10 @@ def star(request, station_number):
     station = Station.objects.get(number=station_number)
     station.toggle_star()
     station.save()
-    return HttpResponseRedirect(reverse('velose:index'))
+    return HttpResponseRedirect(reverse('velouse:index'))
 
 
 def detail(request, station_number):
     refresh_station(station_number)
     context = {'station': Station.objects.get(number=station_number)}
-    return render(request, 'velose/detail.html', context)
+    return render(request, 'velouse/detail.html', context)

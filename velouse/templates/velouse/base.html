@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Oh le joli petit site{% endblock %}</title>
+    {% block includes %}
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'velose/style.css' %}">
+    {% endblock %}
+</head>
+<body>
+{% block header %}
+<div class="d-flex justify-content-between bg-secondary p-1 bg-info text-light">
+    <a role="button" class="btn" href="{% url 'velouse:index' %}">
+        <h1 class="p-2 m-2 flex-grow-1 text-light">Enlarge your vélouse
+        {% if user.is_authenticated %}
+         - {{ user.get_username }}
+        {% endif %}
+        </h1>
+    </a>
+    <div class="button-group mx-2 my-4 ">
+        <a role="button" class="btn btn-light p-2" href="{% url 'velouse:index' %}">
+            <span class="align-bottom">Rafraichir la page</span>
+        </a>
+        {% if user.is_staff %}
+        <button type="button" class="btn btn-light p-2" data-toggle="modal" data-target="#myModal">
+            Mettre à jour la base de données
+        </button>
+        <div class="modal" id="myModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h4 class="modal-title text-dark">Recharger toute la base de données</h4>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <!-- Modal body -->
+                    <div class="modal-body text-dark">
+                        <p>Etes-vous sûr de vouloir recharger toute la base de données ?</p>
+                        <p>Cette opération peut durer jusqu'à 50s.</p>
+                    </div>
+                    <!-- Modal footer -->
+                    <div class="modal-footer">
+                        <a role="button" class="btn btn-primary" href="{% url 'velouse:update' %}">Confirmer</a>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if user.is_authenticated %}
+            <span>User: {{ user.get_username }}</span>
+            <a role="button" class="btn btn-light p-2" href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>
+        {% else %}
+            <a role="button" class="btn btn-light p-2" href="{% url 'login'%}?next={{request.path}}">Login</a></li>
+        {% endif %}
+    </div>
+</div>
+<br>
+{% endblock %}
+{% block content %}
+{% endblock %}
+</body>
+</html>

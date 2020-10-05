@@ -3,8 +3,8 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('velose/', include('velose.urls')),
-    path('polls/', include('polls.urls')),
+    path('velouse/', include('velouse.urls')),
     path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(url='velose/')),
+    path('', RedirectView.as_view(url='velouse/')),
+    path('accounts/', include('django.contrib.auth.urls')),
 ]
