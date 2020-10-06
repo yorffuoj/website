@@ -15,8 +15,9 @@ API_KEY = '54b6f2be9a8f6d369691075425d0e11b4611a9d5'
 
 
 def index(request):
-    starred_stations = Station.objects.filter(starred__exact=True)
+    user = request.user
     refresh_database()
+    starred_stations = user.stations.all() if user.is_authenticated else None
 
     context = {'starred_stations': starred_stations, 'stations': Station.objects.all(), }
 
@@ -42,7 +43,6 @@ def update(request):
 
 
 def get_stations_from_api():
-    print(f'[{datetime.now()}] Request JCDecaux API')
     stations_url = f'{BASE_URL}?contract={CONTRACT}&apiKey={API_KEY}'
     req = requests.get(stations_url)
     return json.loads(req.text)
@@ -82,7 +82,6 @@ def refresh_database():
     if not Station.objects.all():
         reload_full_database()
 
-    print(f'[{datetime.now()}] Start refreshing station database')
     stations = get_stations_from_api()
     station_list = []
     for station in stations:
@@ -112,8 +111,10 @@ def star_no_arg(request):
 
 def star(request, station_number):
     station = Station.objects.get(number=station_number)
-    station.toggle_star()
-    station.save()
+    user = request.user
+    if user.is_authenticated:
+        user.toggle_station(station)
+        user.save()
     return HttpResponseRedirect(reverse('velouse:index'))
 
 

@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'velouse/bootstrap.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'velouse/style.css' %}">
     <script src="{% static 'velouse/jquery.min.js' %}"></script>
-    <script src="{% static 'velouse/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'velouse/bootstrap.min.js' %}"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
           integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
           crossorigin=""/>
@@ -22,9 +22,9 @@
 {% block header %}
 <div class="d-flex justify-content-between bg-secondary p-1 bg-info text-light">
     <a role="button" class="btn" href="{% url 'velouse:index' %}">
-        <h1 class="p-2 m-2 flex-grow-1 text-light">Enlarge your vélouse
+        <h1 class="p-2 m-2 flex-grow-1 text-light">T'es chez moi
         {% if user.is_authenticated %}
-         - {{ user.get_username }}
+            {{ user.get_username }} !
         {% endif %}
         </h1>
     </a>

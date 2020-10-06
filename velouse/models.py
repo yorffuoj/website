@@ -1,7 +1,9 @@
+import json
 from datetime import datetime
 
 from django.db import models
 from django.utils.timezone import make_aware
+from django.contrib.auth.models import AbstractUser
 
 STATION_STATUSES = (
     ('OPEN', 'Open'),
@@ -18,6 +20,9 @@ class Position(models.Model):
         position = cls(lat=lat, lng=lng)
         return position
 
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
 
 class Station(models.Model):
     number = models.IntegerField(primary_key=True)
@@ -32,7 +37,6 @@ class Station(models.Model):
     available_bikes = models.IntegerField('velos dispos')
     status = models.CharField(max_length=200, choices=STATION_STATUSES)
     last_update = models.DateTimeField('dernière mise-à-jour')
-    starred = models.BooleanField()
 
     def __str__(self):
         return f"{self.number} - {self.name}"
@@ -55,7 +59,6 @@ class Station(models.Model):
                       available_bikes=available_bikes,
                       status=status,
                       last_update=formatted_update,
-                      starred=False,
                       )
         return station
 
@@ -67,5 +70,15 @@ class Station(models.Model):
         self.status = status
         self.last_update = formatted_update
 
-    def toggle_star(self):
-        self.starred = not self.starred
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+
+class VelouseUser(AbstractUser):
+    stations = models.ManyToManyField(Station, blank=True)
+
+    def toggle_station(self, station):
+        if station in self.stations.all():
+            self.stations.remove(station)
+        else:
+            self.stations.add(station)
