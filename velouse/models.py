@@ -1,41 +1,63 @@
-import json
+import logging
 from datetime import datetime
 
-from django.db import models
-from django.utils.timezone import make_aware
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.dispatch import receiver
+from django.utils.timezone import make_aware
+
+logger = logging.getLogger(__name__)
 
 STATION_STATUSES = (
     ('OPEN', 'Open'),
     ('CLOSED', 'Closed')
 )
 
+DEFAULT_ZOOM = 15
+DEFAULT_LATITUDE = 43.6118
+DEFAULT_LONGITUDE = 1.4465
+
 
 class Position(models.Model):
-    lat = models.DecimalField(max_digits=17, decimal_places=14)
-    lng = models.DecimalField(max_digits=17, decimal_places=14)
+    lat = models.DecimalField(max_digits=17,
+                              decimal_places=14,
+                              default=DEFAULT_LATITUDE,
+                              )
+    lng = models.DecimalField(max_digits=17,
+                              decimal_places=14,
+                              default=DEFAULT_LONGITUDE,
+                              )
+
+    def __str__(self):
+        return f"[lat: {self.lat}, lng: {self.lng}]"
 
     @classmethod
     def create(cls, lat, lng):
         position = cls(lat=lat, lng=lng)
         return position
 
-    def to_json(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-
 
 class Station(models.Model):
     number = models.IntegerField(primary_key=True)
     contract_name = models.CharField(max_length=50)
-    name = models.CharField('nom', max_length=200)
-    address = models.CharField('adresse', max_length=200)
-    position = models.OneToOneField('Position', on_delete=models.CASCADE, null=True)
+    name = models.CharField('nom',
+                            max_length=200,
+                            )
+    address = models.CharField('adresse',
+                               max_length=200,
+                               )
+    position = models.OneToOneField('position',
+                                    on_delete=models.CASCADE,
+                                    null=True,
+                                    )
     banking = models.BooleanField()
     bonus = models.BooleanField()
     bike_stands = models.IntegerField('bornes')
     available_bike_stands = models.IntegerField('bornes dispos')
     available_bikes = models.IntegerField('velos dispos')
-    status = models.CharField(max_length=200, choices=STATION_STATUSES)
+    status = models.CharField(max_length=200,
+                              choices=STATION_STATUSES,
+                              )
     last_update = models.DateTimeField('dernière mise-à-jour')
 
     def __str__(self):
@@ -70,15 +92,42 @@ class Station(models.Model):
         self.status = status
         self.last_update = formatted_update
 
-    def to_json(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-
 
 class VelouseUser(AbstractUser):
-    stations = models.ManyToManyField(Station, blank=True)
+    stations = models.ManyToManyField(Station,
+                                      blank=True,
+                                      )
+    map_zoom = models.IntegerField("zoom par defaut",
+                                   blank=True,
+                                   default=DEFAULT_ZOOM,
+                                   )
+    map_center = models.ForeignKey(Position,
+                                   on_delete=models.CASCADE,
+                                   null=True,
+                                   blank=True,
+                                   )
 
     def toggle_station(self, station):
         if station in self.stations.all():
+            logger.info(f'Unstar station "{station}" for user {self.username}')
             self.stations.remove(station)
         else:
+            logger.info(f'Star station "{station}" for user {self.username}')
             self.stations.add(station)
+
+    def set_map_view(self, zoom, lat, lng):
+        map_center = Position.create(lat, lng)
+        logger.info(f'Set default map viem to {map_center} at zoom {zoom} for user {self.username}')
+        self.map_center = map_center
+        self.map_zoom = zoom
+
+
+@receiver(models.signals.post_save, sender=VelouseUser)
+def user_created(sender, instance, created, **kwargs):
+    if created and not instance.map_center:
+        pos = Position.objects.filter(lat=DEFAULT_LATITUDE, lng=DEFAULT_LONGITUDE)
+        if not pos.exists():
+            pos = Position.create(DEFAULT_LATITUDE, DEFAULT_LONGITUDE)
+            pos.save()
+        instance.map_center = pos
+        instance.save()

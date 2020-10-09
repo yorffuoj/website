@@ -11,10 +11,10 @@ class StationAdmin(admin.ModelAdmin):
 class VelouseUserAdmin(UserAdmin):
     ...
     fieldsets = UserAdmin.fieldsets + (
-        (None, {'fields': ('stations',)}),
+        (None, {'fields': ('stations', 'map_zoom', 'map_center',)}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        (None, {'fields': ('stations',)}),
+        (None, {'fields': ('stations', 'map_zoom', 'map_center',)}),
     )
 
 

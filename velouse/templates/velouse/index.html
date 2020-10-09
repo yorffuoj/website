@@ -1,14 +1,15 @@
 {% extends "velouse/base.html" %}
 
 {% block title %}Enlarge your velouse{% endblock %}
+{% load static %}
 
 {% block content %}
-
+{% with starred=user.stations.all user_authenticated=user.is_authenticated %}
 <div class="starred_stations">
-    {% if user.is_authenticated %}
+    {% if user_authenticated %}
     <h1>Les stations de vélouse de {{ user.get_username }} :</h1>
     <div class="card-columns">
-    {% for station in starred_stations%}
+    {% for station in starred%}
         <div class="card" style="max-width: 22rem;">
             <div class="card-header">
                 <p class="card-text text-info">{{ station.name }}</p>
@@ -54,7 +55,7 @@
             </div>
             <div class="card-footer">
                 <a href="{% url 'velouse:detail' station.number %}" class="btn btn-primary" >Informations</a>
-                <a href="{% url 'velouse:star' station.number %}" type="button" method="POST" class="btn btn-light float-right text-warning pt-1 pb-2" style="overflow: visible">
+                <a href="{% url 'velouse:star' station.number %}" type="button" class="btn btn-light float-right text-warning pt-1 pb-2" style="overflow: visible">
                     <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-star" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.283.95l-3.523 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
                     </svg>
@@ -84,7 +85,7 @@
                 <select name="station" id="station_select" class="custom-select">
                     <option selected>Sélectionner une station...</option>
                     {% for station in stations %}
-                        {% if station not in user.stations.all %}
+                        {% if station not in starred %}
                         <option value="{{ station.number }}-{{ station.position.lat }}-{{ station.position.lng }}">
                             {{ station.number }} - {{ station.name }}
                         </option>
@@ -96,13 +97,32 @@
     </form>
 </div>
 <br>
-<div id="mapid" style="width: 800px; height: 400px;"></div>
+<div id="mapid" class="rounded-lg border border-primary" style="width: 800px; height: 400px;"></div>
+{% if user_authenticated %}
+<br>
+<div>
+    <button type="button" class="btn btn-primary" onclick="setDefaultView();">Definir comme vue par défaut</button>
+    <p><small>Cette vue de la carte sera affichée lorque vous arrivez sur cette page</small></p>
+</div>
+{% endif %}
 <br>
 <script>
-	var mymap = L.map('mapid').setView([43.6118, 1.4465], 15);
+    var lat;
+    var lng;
+    var zoom;
+    {% if user_authenticated %}
+        lat = {{ user.map_center.lat }};
+        lng = {{ user.map_center.lng }};
+        zoom = {{ user.map_zoom }};
+    {% else %}
+        lat = 43.6118;
+        lng = 1.4465;
+        zoom = 15;
+    {% endif %}
+	var mymap = L.map('mapid').setView([lat, lng], zoom);
 
 	L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-		maxZoom: 18,
+		maxZoom: 20,
 		attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
 			'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
 			'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -126,14 +146,17 @@
             available_bikes_icon = "<svg width=\"1em\" height=\"1em\" viewBox=\"0 0 16 16\" class=\"bi bi-x-circle-fill text-danger\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\" style=\"overflow: visible\">\
                 <path fill-rule=\"evenodd\" d=\"M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z\"/>\
             </svg>"
+            upMarker = '-d';
         {% elif station.available_bikes <= 5 %}
             available_bikes_icon = "<svg width=\"1.0625em\" height=\"1em\" viewBox=\"0 0 17 16\" class=\"bi bi-exclamation-triangle-fill text-warning\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\" style=\"overflow: visible\">\
                 <path fill-rule=\"evenodd\" d=\"M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 5zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z\"/>\
             </svg>"
+            upMarker = '-w';
         {% else %}
             available_bikes_icon = "<svg width=\"1em\" height=\"1em\" viewBox=\"0 0 16 16\" class=\"bi bi-check-circle-fill text-success\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\" style=\"overflow: visible\">\
                 <path fill-rule=\"evenodd\" d=\"M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z\"/>\
             </svg>"
+            upMarker = '-s';
         {% endif %}
         var available_bikes = available_bikes_icon + " {{ station.available_bikes }} vélouses dispos";
 
@@ -142,21 +165,25 @@
             available_bike_stands_icon = "<svg width=\"1em\" height=\"1em\" viewBox=\"0 0 16 16\" class=\"bi bi-x-circle-fill text-danger\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\" style=\"overflow: visible\">\
                 <path fill-rule=\"evenodd\" d=\"M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z\"/>\
             </svg>"
+            downMarker = '-d';
         {% elif station.available_bike_stands <= 5 %}
             available_bike_stands_icon = "<svg width=\"1.0625em\" height=\"1em\" viewBox=\"0 0 17 16\" class=\"bi bi-exclamation-triangle-fill text-warning\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\" style=\"overflow: visible\">\
                 <path fill-rule=\"evenodd\" d=\"M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 5zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z\"/>\
             </svg>"
+            downMarker = '-w';
         {% else %}
             available_bike_stands_icon = "<svg width=\"1em\" height=\"1em\" viewBox=\"0 0 16 16\" class=\"bi bi-check-circle-fill text-success\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\" style=\"overflow: visible\">\
                 <path fill-rule=\"evenodd\" d=\"M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z\"/>\
             </svg>"
+            downMarker = '-s';
         {% endif %}
         var available_bike_stands = available_bike_stands_icon + " {{ station.available_bike_stands }} bornes libres";
 
         info_button = "<a href=\"{% url 'velouse:detail' station.number %}\" class=\"btn btn-primary text-white px-1 py-0\" ><small>Informations</small></a>";
 
-        var add_button;
-        {% if station in user.stations.all %}
+        var add_button = '';
+        {% if user_authenticated %}
+        {% if station in starred %}
         add_button = "<a href=\"{% url 'velouse:star' station.number %}\" method=POST>\
                 <svg width=\"1em\" height=\"1em\" viewBox=\"0 0 16 16\" class=\"bi bi-star float-right text-warning mt-2\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\" style=\"overflow: visible\">\
                     <path fill-rule=\"evenodd\" d=\"M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.283.95l-3.523 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z\"/>\
@@ -169,13 +196,30 @@
                 </svg>\
             </a>";
          {% endif %}
+         {% endif %}
 
-	    marker = L.marker([{{ station.position.lat }}, {{ station.position.lng }}])
-	        .bindPopup("<strong>{{ station.name }}</strong><br>\
-	                    Station n°{{ station.number }}" + status + "<br>" +
-	                    available_bikes + "<br>" +
-	                    available_bike_stands + "<br>" +
-	                    info_button + add_button)
+        popup = "<strong>{{ station.name }}</strong><br>\
+                    Station n°{{ station.number }}" + status + "<br>" +
+                    available_bikes + "<br>" +
+                    available_bike_stands + "<br>" +
+                    info_button + add_button;
+
+        markerIconUrl = '{% static 'velouse/img/marker' %}' + upMarker + downMarker + '.png';
+        markerPosition = [{{ station.position.lat }}, {{ station.position.lng }}];
+        markerIcon = L.icon({
+            iconUrl: markerIconUrl,
+            iconSize: [30, 30],
+            iconAnchor: [15, 30],
+            popupAnchor: [0, -30],
+        });
+        markerOptions = {
+            title: '{{ station.number }} - {{ station.name }}',
+            icon: markerIcon,
+            opacity: 0.8
+        };
+
+	    marker = L.marker(markerPosition, markerOptions)
+	        .bindPopup(popup)
 	        .addTo(mymap);
 
 	    stationMarkers.set({{ station.number }}, marker)
@@ -192,6 +236,14 @@
         var station_info = select.value.split('-');
         position(parseInt(station_info[0], 10), station_info[1], station_info[2]);
     }
+
+    var popup = L.popup();
+
+    function setDefaultView() {
+        zoom = mymap.getZoom();
+        center = mymap.getCenter();
+        window.open(url);
+    }
 </script>
 <script>
 $(document).ready(function(){
@@ -203,4 +255,15 @@ $(document).ready(function(){
   });
 });
 </script>
+<script>
+$(document).ready(function(){
+  $("#myInput2").on("keyup", function() {
+    var value = $(this).val().toLowerCase();
+    $(".dropdown-menu li").filter(function() {
+      $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+    });
+  });
+});
+</script>
+{% endwith %}
 {% endblock %}
