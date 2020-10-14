@@ -7,7 +7,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import Station, Position
+from .models import Station
+from .forms import MapSizeForm
 
 BASE_URL = 'https://api.jcdecaux.com/vls/v1/stations/'
 CONTRACT = 'toulouse'
@@ -19,7 +20,17 @@ logger = logging.getLogger(__name__)
 def index(request):
     logger.info('Loading main Velouse page')
     refresh_database()
-    context = {'stations': Station.objects.select_related('position').all()}
+
+    user = request.user
+    if user.is_authenticated:
+        form = MapSizeForm(initial={'lat': user.map_center.lat,
+                                    'lng': user.map_center.lng,
+                                    'zoom': user.map_zoom,
+                                    })
+    else:
+        form = MapSizeForm()
+
+    context = {'stations': Station.objects.select_related('position').all(), 'form': form}
     return render(request, 'velouse/index.html', context)
 
 
@@ -97,13 +108,22 @@ def update(request):
     return HttpResponseRedirect(reverse('velouse:index'))
 
 
-def set_default_view(request, zoom, latitude, longitude):
+def set_default_view(request):
     user = request.user
     if user.is_authenticated:
-        logger.info(f'Set default view of {user.get_username()} to latitude {latitude}, longitude {longitude}'
-                    f' and zoom {zoom}')
-        user.set_map_view(zoom, latitude, longitude)
-        user.save()
+        if request.method == 'POST':
+            form = MapSizeForm(request.POST)
+            if form.is_valid():
+                lat = form.cleaned_data['lat']
+                lng = form.cleaned_data['lng']
+                zoom = form.cleaned_data['zoom']
+                logger.info(
+                    f'Set default view of {user.get_username()} to latitude {lat}, longitude {lng} and zoom {zoom}')
+                user.set_map_view(zoom, lat, lng)
+                user.save()
+                return HttpResponseRedirect(reverse('velouse:index'))
+        else:
+            form = MapSizeForm()
     return HttpResponseRedirect(reverse('velouse:index'))
 
 
@@ -118,7 +138,7 @@ def star(request, station_number):
 
 def detail(request, station_number):
     station = Station.objects.get(number=station_number)
-    logger.info('Loading information page for station "{station}"')
+    logger.info(f'Loading information page for station "{station}"')
     refresh(station)
     context = {'station': station}
     return render(request, 'velouse/detail.html', context)

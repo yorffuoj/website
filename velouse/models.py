@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.dispatch import receiver
 from django.utils.timezone import make_aware
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -13,19 +14,15 @@ STATION_STATUSES = (
     ('CLOSED', 'Closed')
 )
 
-DEFAULT_ZOOM = 15
-DEFAULT_LATITUDE = 43.6118
-DEFAULT_LONGITUDE = 1.4465
-
 
 class Position(models.Model):
     lat = models.DecimalField(max_digits=17,
                               decimal_places=14,
-                              default=DEFAULT_LATITUDE,
+                              default=settings.DEFAULT_LATITUDE,
                               )
     lng = models.DecimalField(max_digits=17,
                               decimal_places=14,
-                              default=DEFAULT_LONGITUDE,
+                              default=settings.DEFAULT_LONGITUDE,
                               )
 
     def __str__(self):
@@ -99,7 +96,7 @@ class VelouseUser(AbstractUser):
                                       )
     map_zoom = models.IntegerField("zoom par defaut",
                                    blank=True,
-                                   default=DEFAULT_ZOOM,
+                                   default=settings.DEFAULT_ZOOM,
                                    )
     map_center = models.ForeignKey(Position,
                                    on_delete=models.CASCADE,
@@ -116,18 +113,14 @@ class VelouseUser(AbstractUser):
             self.stations.add(station)
 
     def set_map_view(self, zoom, lat, lng):
-        map_center = Position.create(lat, lng)
+        map_center, creation = Position.objects.get_or_create(lat=lat, lng=lng)
         logger.info(f'Set default map viem to {map_center} at zoom {zoom} for user {self.username}')
         self.map_center = map_center
         self.map_zoom = zoom
 
-
 @receiver(models.signals.post_save, sender=VelouseUser)
 def user_created(sender, instance, created, **kwargs):
     if created and not instance.map_center:
-        pos = Position.objects.filter(lat=DEFAULT_LATITUDE, lng=DEFAULT_LONGITUDE)
-        if not pos.exists():
-            pos = Position.create(DEFAULT_LATITUDE, DEFAULT_LONGITUDE)
-            pos.save()
+        pos, creation = Position.objects.get_or_create(lat=settings.DEFAULT_LATITUDE, lng=settings.DEFAULT_LONGITUDE)
         instance.map_center = pos
         instance.save()

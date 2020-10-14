@@ -4,19 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Oh le joli petit site{% endblock %}</title>
-    {% block includes %}
     {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'velouse/bootstrap.min.css' %}">
-    <script src="{% static 'velouse/jquery.min.js' %}"></script>
-    <script src="{% static 'velouse/bootstrap.bundle.min.js' %}"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-          crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-            crossorigin=""></script>
-    <link rel="stylesheet" type="text/css" href="{% static 'velouse/style.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'velouse/css/bootstrap.min.css' %}">
+    <script src="{% static 'velouse/js/jquery.min.js' %}"></script>
+    <script src="{% static 'velouse/js/bootstrap.bundle.min.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'velouse/css/style.css' %}">
     <link rel="icon" href="{% static 'velouse/img/velouse.ico' %}" />
+    {% block includes %}
     {% endblock %}
 </head>
 <body>

@@ -8,4 +8,5 @@ urlpatterns = [
     path('update', views.update, name='update'),
     path('<int:station_number>/star', views.star, name='star'),
     path('<int:station_number>', views.detail, name='detail'),
+    path('set_default_view', views.set_default_view, name='set_view')
 ]
