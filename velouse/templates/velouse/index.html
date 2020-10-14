@@ -303,8 +303,7 @@
         zoomItem.value=zoom;
     }
 
-    mymap.on('drag', onMapMoved);
-    mymap.on('zoom', onMapMoved);
+    mymap.on('move', onMapMoved);
 
     latItem.oninput = function(event) {
         var lat = latItem.value;
