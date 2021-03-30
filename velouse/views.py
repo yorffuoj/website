@@ -79,7 +79,7 @@ def get_stations_from_api():
 
 
 def modify_name(name):
-    p = re.compile("\d+ - ([\S\s]*)")
+    p = re.compile(r'\d+ - ([\S\s]*)')
     return p.match(name).group(1).strip()
 
 
